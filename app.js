@@ -19,10 +19,7 @@ const state = {
   signedIn: false,
   data: null,
 };
-let googleClientId = '';
-let googleInitialized = false;
-const SESSION_TOKEN_KEY = 'vistasky_session_token';
-let sessionToken = null;
+const PREFERENCES_KEY = 'vistasky_weather_preferences_v1';
 
 /* ---------- Weather code mapping ---------- */
 function wx(code, isDay = 1) {
@@ -112,23 +109,6 @@ function showError(msg) {
   if (!msg) return box.classList.add('hidden');
   box.textContent = msg;
   box.classList.remove('hidden');
-}
-
-async function apiJson(url, options = {}) {
-  const headers = {
-    ...(options.body ? { 'Content-Type': 'application/json' } : {}),
-    ...(sessionToken ? { Authorization: `Bearer ${sessionToken}` } : {}),
-    ...options.headers,
-  };
-  const res = await fetch(url, {
-    ...options,
-    credentials: 'omit',
-    headers,
-  });
-  let body;
-  try { body = await res.json(); } catch { throw new Error('The server returned an invalid response.'); }
-  if (!res.ok) throw new Error(body.error || 'The request could not be completed.');
-  return body;
 }
 
 /* ---------- Data ---------- */
@@ -471,7 +451,7 @@ function renderSaved() {
     list.insertAdjacentHTML('beforeend', `
       <div class="mt-3 pt-3 border-t border-slate-100 text-xs text-slate-500 flex items-start gap-2">
         <i data-lucide="cloud" class="w-3.5 h-3.5 mt-0.5 shrink-0"></i>
-        <span><button id="sidebarSignIn" class="text-blue-600 font-medium hover:underline">Sign in with Google</button> to keep your cities synced across devices.</span>
+        <span><button id="sidebarSignIn" class="text-blue-600 font-medium hover:underline">Sign in with Puter</button> to keep your cities synced across devices.</span>
       </div>`);
     $('sidebarSignIn').onclick = signIn;
   }
@@ -485,23 +465,29 @@ function renderSaved() {
   refreshIcons();
 }
 
-/* ---------- Synced preferences ---------- */
+/* ---------- Puter cloud preferences ---------- */
 async function persist() {
   if (!state.signedIn) return;
   try {
-    await apiJson('/api/preferences', {
-      method: 'PUT',
-      body: JSON.stringify({ preferences: { saved: state.saved, unit: state.unit, last: state.place, theme: isDark() ? 'dark' : 'light' } }),
-    });
-  } catch (e) {
-    showError(`Could not save your synced weather preferences: ${e.message}`);
+    await window.puter.kv.set(PREFERENCES_KEY, JSON.stringify({
+      saved: state.saved,
+      unit: state.unit,
+      last: state.place,
+      theme: isDark() ? 'dark' : 'light',
+    }));
+  } catch (error) {
+    showError(`Could not save your synced weather preferences: ${error.message}`);
   }
 }
 
 async function loadPrefs() {
   try {
-    const { preferences } = await apiJson('/api/preferences');
-    if (!preferences) return persist();
+    const stored = await window.puter.kv.get(PREFERENCES_KEY);
+    if (!stored) return persist();
+    const preferences = typeof stored === 'string' ? JSON.parse(stored) : stored;
+    if (!preferences || typeof preferences !== 'object' || Array.isArray(preferences)) {
+      throw new Error('Saved weather preferences have an invalid format.');
+    }
     if (Array.isArray(preferences.saved)) state.saved = preferences.saved;
     if (preferences.unit === 'celsius' || preferences.unit === 'fahrenheit') state.unit = preferences.unit;
     if (preferences.last) state.place = preferences.last;
@@ -509,8 +495,8 @@ async function loadPrefs() {
       document.documentElement.classList.toggle('dark', preferences.theme === 'dark');
       try { localStorage.setItem('skycast_theme', preferences.theme); } catch {}
     }
-  } catch (e) {
-    showError(`Could not load your synced weather preferences: ${e.message}`);
+  } catch (error) {
+    showError(`Could not load your synced weather preferences: ${error.message}`);
   }
 }
 
@@ -527,114 +513,46 @@ function toggleSave() {
   render();
 }
 
-/* ---------- Google sign-in ---------- */
+/* ---------- Puter sign-in ---------- */
 async function updateAuthUI() {
+  if (!window.puter?.auth) throw new Error('Puter sign-in could not be loaded. Check your connection and try again.');
+  state.signedIn = Boolean(window.puter.auth.isSignedIn());
   const btn = $('authBtn');
-  const { signedIn } = await apiJson('/api/auth/session');
-  state.signedIn = signedIn;
-  if (!signedIn && sessionToken) {
-    sessionToken = null;
-    try { sessionStorage.removeItem(SESSION_TOKEN_KEY); } catch {}
-  }
-  btn.title = signedIn ? 'Sign out' : 'Sign in with Google';
+  btn.title = state.signedIn ? 'Sign out of Puter' : 'Sign in with Puter';
   btn.setAttribute('aria-label', btn.title);
-  btn.innerHTML = `<i data-lucide="${signedIn ? 'log-out' : 'user'}" class="w-4 h-4"></i><span id="authLabel" class="hidden md:inline">${signedIn ? 'Sign out' : 'Sign in with Google'}</span>`;
-  $('deleteDataBtn').classList.toggle('hidden', !signedIn);
+  btn.innerHTML = `<i data-lucide="${state.signedIn ? 'log-out' : 'user'}" class="w-4 h-4"></i><span id="authLabel" class="hidden md:inline">${state.signedIn ? 'Sign out' : 'Sign in with Puter'}</span>`;
+  $('deleteDataBtn').classList.toggle('hidden', !state.signedIn);
   refreshIcons();
 }
 
-let googleScriptPromise;
-
-function loadGoogleIdentityServices() {
-  if (window.google?.accounts?.id) return Promise.resolve();
-  if (googleScriptPromise) return googleScriptPromise;
-  googleScriptPromise = new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.onload = resolve;
-    script.onerror = () => reject(new Error('Google sign-in could not be loaded. Check your connection and try again.'));
-    document.head.appendChild(script);
-  }).catch((error) => {
-    googleScriptPromise = null;
-    throw error;
-  });
-  return googleScriptPromise;
-}
-
-async function completeGoogleSignIn(credential) {
+async function signIn() {
   try {
-    const { sessionToken: token } = await apiJson('/api/auth/google', { method: 'POST', body: JSON.stringify({ credential }) });
-    if (!token) throw new Error('Sign-in did not return a session token.');
-    sessionToken = token;
-    try {
-      sessionStorage.setItem(SESSION_TOKEN_KEY, sessionToken);
-    } catch {
-      await apiJson('/api/auth/logout', { method: 'POST', body: '{}' }).catch(() => {});
-      sessionToken = null;
-      throw new Error('Browser session storage is unavailable. Enable session storage to sign in.');
-    }
-    $('googleSignInDialog').close();
+    if (!window.puter?.auth) throw new Error('Puter sign-in could not be loaded. Check your connection and try again.');
+    await window.puter.auth.signIn();
     await updateAuthUI();
+    if (!state.signedIn) throw new Error('Puter sign-in did not complete.');
     await loadPrefs();
     updateUnitButtons();
     renderSaved();
     loadPlace(state.place);
-  } catch (e) {
-    const error = $('googleSignInError');
-    error.textContent = e.message;
-    error.classList.remove('hidden');
-  }
-}
-
-async function signIn() {
-  const dialog = $('googleSignInDialog');
-  const error = $('googleSignInError');
-  error.classList.add('hidden');
-  $('googleSignInButton').replaceChildren();
-  dialog.showModal();
-  if (!googleClientId) {
-    error.textContent = 'Google sign-in is not configured on this deployment. The server needs a Google client ID and durable account storage.';
-    error.classList.remove('hidden');
-    return;
-  }
-  try {
-    await loadGoogleIdentityServices();
-    if (!googleInitialized) {
-      window.google.accounts.id.initialize({
-        client_id: googleClientId,
-        callback: ({ credential }) => completeGoogleSignIn(credential),
-        auto_select: false,
-        cancel_on_tap_outside: true,
-      });
-      googleInitialized = true;
-    }
-    window.google.accounts.id.renderButton($('googleSignInButton'), {
-      type: 'standard',
-      theme: isDark() ? 'filled_black' : 'outline',
-      size: 'large',
-      text: 'continue_with',
-      shape: 'rectangular',
-      width: 260,
-    });
-  } catch (e) {
-    error.textContent = e.message;
-    error.classList.remove('hidden');
+  } catch (error) {
+    showError(`Could not sign in with Puter: ${error.message}`);
   }
 }
 
 async function signOut() {
   try {
-    await apiJson('/api/auth/logout', { method: 'POST', body: '{}' });
-    sessionToken = null;
-    try { sessionStorage.removeItem(SESSION_TOKEN_KEY); } catch {}
+    await window.puter.auth.signOut();
     state.signedIn = false;
     state.saved = [...DEFAULT_CITIES];
+    state.unit = 'celsius';
+    state.place = DEFAULT_CITIES[0];
     await updateAuthUI();
     renderSaved();
-    render();
-  } catch (e) {
-    showError(`Could not sign out: ${e.message}`);
+    updateUnitButtons();
+    loadPlace(state.place);
+  } catch (error) {
+    showError(`Could not sign out: ${error.message}`);
   }
 }
 
@@ -642,11 +560,10 @@ $('authBtn').onclick = async () => {
   if (state.signedIn) await signOut();
   else await signIn();
 };
-$('cancelGoogleSignInBtn').onclick = () => $('googleSignInDialog').close();
 $('deleteDataBtn').onclick = async () => {
   if (!state.signedIn || !window.confirm('Permanently delete your synced saved cities and weather preferences?')) return;
   try {
-    await apiJson('/api/preferences', { method: 'DELETE' });
+    await window.puter.kv.del(PREFERENCES_KEY);
     state.saved = [...DEFAULT_CITIES];
     state.unit = 'celsius';
     state.place = DEFAULT_CITIES[0];
@@ -656,8 +573,8 @@ $('deleteDataBtn').onclick = async () => {
     renderSaved();
     loadPlace(state.place);
     toast('Synced weather data deleted');
-  } catch (e) {
-    showError(`Could not delete your synced weather data: ${e.message}`);
+  } catch (error) {
+    showError(`Could not delete your synced weather data: ${error.message}`);
   }
 };
 
@@ -772,15 +689,10 @@ $('locateBtn').onclick = () => {
 (async function init() {
   refreshIcons();
   updateUnitButtons();
-  try { sessionToken = sessionStorage.getItem(SESSION_TOKEN_KEY); } catch {
-    showError('Browser session storage is unavailable. Google sign-in requires session storage.');
-  }
   try {
-    const config = await apiJson('/api/config');
-    googleClientId = config.googleClientId;
     await updateAuthUI();
-  } catch (e) {
-    showError(`Could not connect to Vistasky: ${e.message}`);
+  } catch (error) {
+    showError(`Could not connect to Puter sign-in: ${error.message}`);
   }
   const linked = placeFromUrl();
   if (state.signedIn) { await loadPrefs(); updateUnitButtons(); }

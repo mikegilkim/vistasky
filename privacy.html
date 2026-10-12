@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="index, follow">
-  <meta name="description" content="Vistasky's privacy notice explains Google sign-in, session-only browser storage, synced weather preferences, and third-party services.">
+  <meta name="description" content="Vistasky's privacy notice explains Puter sign-in, synced weather preferences, and third-party services.">
   <title>Privacy Policy — Vistasky</title>
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -20,7 +20,7 @@
     <p class="mt-2 text-sm text-slate-500">Last updated: October 2026</p>
 
     <section class="mt-8 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100" aria-label="Deployment notice">
-      <strong>Deployment setup required:</strong> Before publishing, replace this notice with the operator's legal name, postal address, and privacy contact email, and confirm the legal bases, hosting provider, backup-deletion schedule, retention periods, and international-transfer safeguards for the actual deployment. This template does not by itself certify GDPR compliance.
+      <strong>Deployment setup required:</strong> Before publishing, replace this notice with the operator's legal name, postal address, and privacy contact email, and confirm the legal bases, hosting provider, backup-deletion schedule, retention periods, and international-transfer safeguards for the actual deployment. This notice does not by itself certify GDPR compliance.
     </section>
 
     <section class="mt-8 space-y-3">
@@ -31,34 +31,34 @@
     <section class="mt-7 space-y-3">
       <h2 class="text-xl font-semibold">Information Vistasky processes</h2>
       <ul class="list-disc space-y-2 pl-6">
-        <li><strong>Google sign-in:</strong> Google verifies your account. Vistasky verifies the signed Google credential and processes its stable account identifier to keep you signed in and associate your synced preferences. Vistasky does not save your Google name or email address. Google Identity Services and Google may process information under their own terms.</li>
-        <li><strong>Synced weather preferences:</strong> If you choose to sign in and save preferences, Vistasky stores the Google account identifier as a record key, saved city names and coordinates, your last selected location, temperature units, and theme in a Supabase Postgres database managed for this deployment. The deployment operator can access this data.</li>
-        <li><strong>Browser storage:</strong> Vistasky does not set or read cookies. The browser stores your display theme in local storage. If you sign in, a random bearer session token is held in session storage for that browser tab and sent in authorization headers; it is cleared when you sign out or close the tab. Supabase stores only a SHA-256 hash of the token and its Google account association, with a validity period of up to 24 hours. Browser session storage is available to scripts running on this site, so keeping the app and its dependencies secure is important.</li>
+        <li><strong>Puter sign-in:</strong> If you choose to sign in, Puter authenticates you with your Puter account through its Puter.js SDK. Puter processes account and authentication information under its own terms. Vistasky does not receive or store your Puter password.</li>
+        <li><strong>Synced weather preferences:</strong> If you choose to sign in, Vistasky stores your saved city names and coordinates, last selected location, temperature units, and theme as a single preference value in the Puter Key-Value Store associated with your account. Puter operates this cloud storage.</li>
+        <li><strong>Browser storage:</strong> Vistasky itself does not set or read cookies. The browser stores your display theme in local storage. Puter.js manages its own authentication state and may use browser storage or other mechanisms as part of Puter's sign-in service.</li>
         <li><strong>Weather and location requests:</strong> Searching a city sends the search text to Open-Meteo's geocoding service. Forecast requests send the selected location's coordinates to Open-Meteo. If you choose device location, your browser asks permission and coordinates may be sent to Open-Meteo and BigDataCloud for forecast and reverse-geocoding responses.</li>
-        <li><strong>Technical requests:</strong> The app loads interface libraries, icons, charts, and fonts from third-party CDNs and Google Fonts. Their servers may receive standard request data such as your IP address and browser details. The Google sign-in library is loaded only when you open sign-in.</li>
+        <li><strong>Technical requests:</strong> The app loads Puter.js and interface libraries, icons, charts, and fonts from their providers. Those servers may receive standard request data such as your IP address and browser details.</li>
       </ul>
     </section>
 
     <section class="mt-7 space-y-3">
       <h2 class="text-xl font-semibold">Purposes and legal bases</h2>
-      <p>The app processes data to provide forecasts you request, operate the optional Google sign-in and preference-sync features, remember your choices, and maintain the service. Before launch, the operator must document the appropriate GDPR legal basis for each purpose and the applicable ePrivacy rules for device storage. Device location is requested only after you choose the location feature and grant browser permission.</p>
+      <p>The app processes data to provide forecasts you request, operate optional Puter sign-in and preference sync, remember your theme, and maintain the service. The operator must document the appropriate legal basis for each purpose and the applicable ePrivacy rules for device storage. Device location is requested only after you choose the location feature and grant browser permission.</p>
     </section>
 
     <section class="mt-7 space-y-3">
       <h2 class="text-xl font-semibold">Cookies and third-party services</h2>
-      <p>Vistasky itself does not create, read, or rely on cookies, and it does not run analytics, advertising, or personalization trackers. Google Identity Services is loaded only when you choose Google sign-in. Google may use cookies or other technologies on its own sign-in pages and services, subject to Google's privacy information and settings. Vistasky does not control Google's storage practices.</p>
-      <p>Theme and sign-in state use browser local storage and session storage, respectively. These are browser storage mechanisms, not cookies. Weather, font, icon, chart, and styling requests may still send standard network information, such as your IP address, to the named third-party providers.</p>
+      <p>Vistasky itself does not create, read, or rely on cookies, and it does not run analytics, advertising, or personalization trackers. Puter.js is loaded to provide Puter sign-in and cloud preference sync. Puter may use cookies or other browser storage mechanisms for authentication under its own privacy terms. Vistasky does not control Puter's storage practices.</p>
+      <p>Vistasky stores the display theme in local storage. Puter.js manages its own sign-in state. Weather, font, icon, chart, styling, and authentication requests may send standard network information, such as your IP address, to the named third-party providers.</p>
     </section>
 
     <section class="mt-7 space-y-3">
       <h2 class="text-xl font-semibold">Retention and deletion</h2>
-      <p>On Vercel, the session's token hash is valid for up to 24 hours; expired session rows are cleaned up on the next successful sign-in. The tab's bearer token is removed when you sign out or close the tab. Synced preferences are kept in Supabase until you remove them using <strong>Delete synced weather data</strong> in the app footer. Signing out alone does not delete those preferences. The operator must document how long backup copies, if any, are retained and when deleted data is removed from them.</p>
+      <p>Synced preferences are kept in your Puter account's Key-Value Store until you remove them using <strong>Delete synced weather data</strong> in the app. Signing out alone does not delete those preferences. Puter's retention and deletion practices apply to its authentication and cloud storage services; review Puter's current privacy information for details.</p>
     </section>
 
     <section class="mt-7 space-y-3">
       <h2 class="text-xl font-semibold">Your rights and international processing</h2>
       <p>Subject to applicable law, you may request access, correction, erasure, restriction, portability, or object to processing, and you may withdraw consent where processing relies on consent. Use the in-app data deletion control for synced preferences or contact the operator using the privacy contact above. You may also complain to your local data-protection authority.</p>
-      <p>Google, Supabase, Vercel, and other named service providers process requests needed to provide their services. Their processing locations and transfer safeguards depend on the operator's deployment and provider arrangements. The operator must identify and document applicable processors, international transfers, and safeguards before launch.</p>
+      <p>Puter, Vercel, and other named service providers process requests needed to provide their services. Their processing locations and transfer safeguards depend on the operator's deployment and provider arrangements. The operator must identify and document applicable processors, international transfers, and safeguards before launch.</p>
     </section>
 
     <p class="mt-10 border-t border-slate-200 pt-5 text-sm text-slate-500 dark:border-slate-800">Return to <a href="/" class="text-blue-600 hover:underline">Vistasky</a> to delete synced weather preferences.</p>

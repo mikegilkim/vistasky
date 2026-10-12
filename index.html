@@ -151,7 +151,7 @@
         <button data-unit="celsius" class="unit-btn px-2.5 py-1 rounded-md">°C</button>
         <button data-unit="fahrenheit" class="unit-btn px-2.5 py-1 rounded-md">°F</button>
       </div>
-      <button id="authBtn" class="h-10 px-3 rounded-lg border border-slate-200 hover:bg-slate-50 text-sm font-medium flex items-center gap-2 shrink-0" aria-label="Sign in with Google">
+      <button id="authBtn" class="h-10 px-3 rounded-lg border border-slate-200 hover:bg-slate-50 text-sm font-medium flex items-center gap-2 shrink-0" aria-label="Sign in with Puter">
         <i data-lucide="user" class="w-4 h-4"></i><span id="authLabel" class="hidden md:inline">Sign in</span>
       </button>
     </div>
@@ -230,20 +230,10 @@
   </main>
 
   <footer class="max-w-6xl mx-auto px-4 pb-8 flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs text-slate-500">
-    <a href="privacy.html" class="hover:underline">Privacy policy</a>
     <button id="deleteDataBtn" class="hidden hover:underline text-red-600">Delete synced weather data</button>
   </footer>
 
-  <dialog id="googleSignInDialog" class="w-[min(92vw,26rem)] rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
-    <h2 class="text-lg font-semibold">Sign in or sign up with Google</h2>
-    <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">Use your Google account to create or access your Vistasky profile and sync saved cities and weather preferences. Vistasky does not save your Google name or email address.</p>
-    <p id="googleSignInError" class="hidden mt-3 text-sm text-red-600" role="alert"></p>
-    <div id="googleSignInButton" class="mt-5 flex justify-center"></div>
-    <div class="mt-5 flex justify-end">
-      <button id="cancelGoogleSignInBtn" class="px-3 py-2 rounded-lg border border-slate-300 text-sm font-medium hover:bg-slate-50 dark:border-slate-600 dark:hover:bg-slate-800">Cancel</button>
-    </div>
-  </dialog>
-
-  <script type="module" src="app.js?v=20261013-supabase-auth"></script>
+  <script src="https://js.puter.com/v2/"></script>
+  <script type="module" src="app.js?v=20261013-puter-auth"></script>
 </body>
 </html>
