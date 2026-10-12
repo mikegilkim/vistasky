@@ -4,6 +4,7 @@ import { createServer } from 'node:http';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import vercelAuthHandler from './api/auth/[...path].js';
 import vercelHandler from './api/[...path].js';
 import { createAppServer } from './server.js';
 
@@ -74,25 +75,36 @@ describe('Vistasky web server', () => {
 
   it('serves Vercel API requests through the serverless handler', async () => {
     const vercelServer = createServer(vercelHandler);
+    const vercelAuthServer = createServer(vercelAuthHandler);
     await new Promise((resolve, reject) => {
       vercelServer.once('error', reject);
       vercelServer.listen(0, '127.0.0.1', resolve);
     });
+    await new Promise((resolve, reject) => {
+      vercelAuthServer.once('error', reject);
+      vercelAuthServer.listen(0, '127.0.0.1', resolve);
+    });
 
     try {
       const base = `http://127.0.0.1:${vercelServer.address().port}`;
-      const [configResponse, sessionResponse] = await Promise.all([
-        fetch(`${base}/api/config`),
-        fetch(`${base}/api/auth/session`),
-      ]);
+      const authBase = `http://127.0.0.1:${vercelAuthServer.address().port}`;
+      const configResponse = await fetch(`${base}/api/config`);
+      const sessionResponse = await fetch(`${authBase}/api/auth/session`);
+      const signInResponse = await fetch(`${authBase}/api/auth/google`, {
+        method: 'POST',
+        headers: { Origin: authBase, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credential: 'unused' }),
+      });
 
       assert.equal(configResponse.status, 200);
       assert.deepEqual(await configResponse.json(), { googleClientId: '' });
       assert.equal(sessionResponse.status, 200);
       assert.deepEqual(await sessionResponse.json(), { signedIn: false });
       assert.equal(sessionResponse.headers.get('set-cookie'), null);
+      assert.equal(signInResponse.status, 503);
     } finally {
-      await new Promise((resolve, reject) => vercelServer.close((error) => error ? reject(error) : resolve()));
+      await Promise.all([vercelServer, vercelAuthServer].map((instance) =>
+        new Promise((resolve, reject) => instance.close((error) => error ? reject(error) : resolve()))));
     }
   });
 

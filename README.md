@@ -35,7 +35,7 @@ Review [privacy.html](./privacy.html) and complete its deployment-owner contact 
 
 ## Deploy to Vercel
 
-Import the repository into Vercel and set the project root to the repository root. The [Vercel configuration](./vercel.json) selects the **Other** framework preset so Vercel serves the static app files and deploys the catch-all API function in [api/](./api) without mistaking the browser's `app.js` for a server entry point. Use `vistasky.vercel.app` as the project domain, if it is available in the deploying Vercel account.
+Import the repository into Vercel and set the project root to the repository root. The [Vercel configuration](./vercel.json) selects the **Other** framework preset so Vercel serves the static app files and deploys the API functions in [api/](./api) without mistaking the browser's `app.js` for a server entry point. Use `vistasky.vercel.app` as the project domain, if it is available in the deploying Vercel account.
 
 The forecast app and weather search run on Vercel. Google sign-in is deliberately disabled there: Vercel instances do not provide the durable local disk and shared session store required by the current preference backend. Do not set `GOOGLE_CLIENT_ID` for this deployment until persistent session and preference storage is implemented and configured. Sign-in and preference sync remain available when using `npm start` with a Google client ID and a persistent `DATA_DIR`.
 
