@@ -10,6 +10,8 @@ const mimeTypes = new Map([
   ['.json', 'application/json; charset=utf-8'],
   ['.png', 'image/png'],
   ['.svg', 'image/svg+xml'],
+  ['.txt', 'text/plain; charset=utf-8'],
+  ['.xml', 'application/xml; charset=utf-8'],
 ]);
 const privateFiles = new Set(['package.json', 'package-lock.json', 'server.js', 'server.test.js']);
 

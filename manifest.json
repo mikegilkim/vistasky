@@ -9,7 +9,7 @@
   "id": "./",
   "name": "Vistasky — Your Smart Weather Companion",
   "short_name": "Vistasky",
-  "description": "Live local weather, hourly and 10-day forecasts, rain chances, weather alerts, and interactive trends for cities worldwide.",
+  "description": "Current weather conditions, hourly and 10-day forecasts, rain chances, wind, UV index, sunrise, sunset, and weather alerts for cities worldwide.",
   "start_url": "./",
   "scope": "./",
   "background_color": "#2563eb",

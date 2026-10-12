@@ -20,21 +20,34 @@ describe('Vistasky static server', () => {
   });
 
   it('serves the branded forecast app and Puter.js sign-in entry point', async () => {
-    const [response, appResponse] = await Promise.all([
+    const [response, appResponse, privacyResponse] = await Promise.all([
       fetch(baseUrl),
       fetch(`${baseUrl}/app.js`),
+      fetch(`${baseUrl}/privacy.html`),
     ]);
     const html = await response.text();
     const app = await appResponse.text();
+    const privacy = await privacyResponse.text();
+    const structuredData = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)?.[1];
 
     assert.equal(response.status, 200);
+    assert.equal(privacyResponse.status, 200);
     assert.match(response.headers.get('content-type'), /text\/html/);
-    assert.match(html, /Vistasky — Your Smart Weather Companion/);
+    assert.match(privacyResponse.headers.get('content-type'), /text\/html/);
+    assert.match(html, /<title>Vistasky Weather Forecast \| Live, Hourly &amp; 10-Day<\/title>/);
+    assert.match(html, /name="description"/);
+    assert.match(html, /rel="canonical" href="https:\/\/vistasky\.vercel\.app\/"/);
+    assert.match(html, /application\/ld\+json/);
+    assert.equal(JSON.parse(structuredData).url, 'https://vistasky.vercel.app/');
+    assert.match(html, /<h1[^>]*>Live Weather Forecasts for Cities Worldwide<\/h1>/);
+    assert.match(privacy, /rel="canonical" href="https:\/\/vistasky\.vercel\.app\/privacy\.html"/);
     assert.match(html, /https:\/\/js\.puter\.com\/v2\//);
     assert.match(html, /googletagmanager\.com\/gtag\/js\?id=G-7S87WY6YLS/);
     assert.match(html, /analytics_storage:\s*'denied'/);
     assert.ok(html.indexOf("analytics_storage: 'denied'") < html.indexOf("gtag('config', 'G-7S87WY6YLS')"));
-    assert.doesNotMatch(html, /Privacy policy|googleSignInDialog|accounts\.google\.com/);
+    assert.match(html, /Weather data by <a href="https:\/\/open-meteo\.com\/"[^>]*>Open-Meteo<\/a>/);
+    assert.match(html, /<a href="privacy\.html" class="hover:underline">Privacy policy<\/a>/);
+    assert.doesNotMatch(html, /Made with Puter|googleSignInDialog|accounts\.google\.com/);
     assert.match(app, /puter\.auth\.signIn\(\)/);
     assert.match(app, /puter\.auth\.signOut\(\)/);
     assert.match(app, /puter\.kv\.set\(PREFERENCES_KEY/);
@@ -42,10 +55,12 @@ describe('Vistasky static server', () => {
   });
 
   it('serves static assets with their content types and cache policy', async () => {
-    const [moduleResponse, manifestResponse, iconResponse] = await Promise.all([
+    const [moduleResponse, manifestResponse, iconResponse, robotsResponse, sitemapResponse] = await Promise.all([
       fetch(`${baseUrl}/app.js`),
       fetch(`${baseUrl}/manifest.json`),
       fetch(`${baseUrl}/icon.svg`),
+      fetch(`${baseUrl}/robots.txt`),
+      fetch(`${baseUrl}/sitemap.xml`),
     ]);
 
     assert.equal(moduleResponse.status, 200);
@@ -54,6 +69,14 @@ describe('Vistasky static server', () => {
     assert.match(manifestResponse.headers.get('content-type'), /application\/json/);
     assert.equal((await manifestResponse.json()).short_name, 'Vistasky');
     assert.match(iconResponse.headers.get('content-type'), /image\/svg\+xml/);
+    assert.equal(robotsResponse.status, 200);
+    assert.match(robotsResponse.headers.get('content-type'), /text\/plain/);
+    assert.match(await robotsResponse.text(), /Sitemap: https:\/\/vistasky\.vercel\.app\/sitemap\.xml/);
+    assert.equal(sitemapResponse.status, 200);
+    assert.match(sitemapResponse.headers.get('content-type'), /application\/xml/);
+    const sitemap = await sitemapResponse.text();
+    assert.match(sitemap, /<loc>https:\/\/vistasky\.vercel\.app\/<\/loc>/);
+    assert.match(sitemap, /<loc>https:\/\/vistasky\.vercel\.app\/privacy\.html<\/loc>/);
   });
 
   it('supports HEAD, rejects unsupported methods, and blocks private paths', async () => {

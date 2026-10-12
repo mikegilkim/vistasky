@@ -24,11 +24,13 @@ Vistasky does not set its own cookies. Puter sign-in is handled by Puter.js and 
 
 Google Analytics (`G-7S87WY6YLS`) is configured with Google Consent Mode storage defaults denied for analytics and advertising. This prevents analytics and advertising cookies but still allows cookieless measurement pings to Google. Review local privacy requirements before changing these defaults.
 
-See [privacy.html](./privacy.html) for the current privacy notice. The public site no longer links to it from the footer.
+See [privacy.html](./privacy.html) for the current privacy notice. A link appears beside the Open-Meteo weather data attribution in the app footer.
 
 ## Deploy to Vercel
 
 Import the GitHub repository into Vercel and set the project root to the repository root. Vercel serves the static app; no `GOOGLE_CLIENT_ID`, Google client secret, Supabase, or other authentication environment variables are required. The app needs access to `https://js.puter.com/v2/` and Puter's services for account sign-in and cloud preference sync.
+
+The site provides a canonical homepage, social metadata, structured application data, an indexable `robots.txt`, and an XML sitemap at `https://vistasky.vercel.app/sitemap.xml`. Add the domain as a property in Google Search Console, verify ownership, and submit the sitemap there. Crawling and indexing are controlled by search engines; these steps improve discovery but cannot guarantee indexing, rankings, or timing.
 
 ## Commands
 

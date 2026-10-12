@@ -335,7 +335,7 @@ function render() {
     <div class="flex items-start justify-between gap-4">
       <div class="min-w-0">
         <div class="flex items-center gap-2 text-white/75 text-sm"><i data-lucide="map-pin" class="w-4 h-4"></i><span class="truncate">${escapeHtml(placeLabel(p))}</span></div>
-        <h1 class="text-2xl sm:text-3xl font-semibold mt-1 truncate">${escapeHtml(p.name)}</h1>
+        <h2 class="text-2xl sm:text-3xl font-semibold mt-1 truncate">${escapeHtml(p.name)}</h2>
         <p class="text-white/75 text-sm mt-1 flex items-center gap-2">${localTime}<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/15 text-xs font-medium text-white"><i data-lucide="${c.is_day ? 'sun' : 'moon'}" class="w-3 h-3"></i>${theme.label}</span></p>
       </div>
       <div class="flex items-center gap-2 shrink-0">

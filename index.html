@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Vistasky — Your Smart Weather Companion | Live Forecasts</title>
-<meta name="description" content="Plan with Vistasky, your smart weather companion. Get live local weather, hourly and 10-day forecasts, rain chances, wind, weather alerts, and interactive trends for cities worldwide.">
-<meta name="keywords" content="Vistasky forecast, weather forecast app, skycast weather technology, local weather updates, hourly and daily forecasts, severe weather alerts, weather trends, global weather coverage, easy weather app, weather app, forecast, local weather, storm alerts, daily outlook, climate trends">
+<title>Vistasky Weather Forecast | Live, Hourly &amp; 10-Day</title>
+<meta name="description" content="Check current weather and plan ahead with Vistasky. Search cities worldwide for hourly and 10-day forecasts, rain chances, wind, UV index, sunrise, sunset, and weather alerts.">
 <meta name="author" content="Vistasky">
 <meta name="application-name" content="Vistasky">
 <meta name="robots" content="index, follow, max-image-preview:large">
 <meta name="color-scheme" content="light dark">
 <meta name="format-detection" content="telephone=no">
+<link rel="canonical" href="https://vistasky.vercel.app/">
 
 <!-- Google Analytics with storage denied to avoid analytics and advertising cookies. -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-7S87WY6YLS"></script>
@@ -30,10 +30,11 @@
 <!-- Open Graph -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Vistasky">
-<meta property="og:title" content="Vistasky — Your Smart Weather Companion">
-<meta property="og:description" content="Stay ahead of the weather with live local conditions, hourly and 10-day forecasts, weather alerts, and interactive trends for cities worldwide.">
+<meta property="og:title" content="Vistasky Weather Forecast | Live, Hourly &amp; 10-Day">
+<meta property="og:description" content="Check current weather and plan ahead with Vistasky. Search cities worldwide for hourly and 10-day forecasts, rain chances, wind, UV index, sunrise, sunset, and weather alerts.">
 <meta property="og:locale" content="en_US">
-<meta property="og:image" content="og-image.svg">
+<meta property="og:url" content="https://vistasky.vercel.app/">
+<meta property="og:image" content="https://vistasky.vercel.app/og-image.svg">
 <meta property="og:image:type" content="image/svg+xml">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -41,10 +42,10 @@
 
 <!-- Twitter -->
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="og-image.svg">
+<meta name="twitter:image" content="https://vistasky.vercel.app/og-image.svg">
 <meta name="twitter:image:alt" content="Vistasky weather app showing live weather for any city with a 10-day forecast">
-<meta name="twitter:title" content="Vistasky — Your Smart Weather Companion">
-<meta name="twitter:description" content="Search cities worldwide for live local weather, hourly and 10-day forecasts, weather alerts, and interactive trends.">
+<meta name="twitter:title" content="Vistasky Weather Forecast | Live, Hourly &amp; 10-Day">
+<meta name="twitter:description" content="Check current weather and plan ahead with Vistasky. Search cities worldwide for hourly and 10-day forecasts, rain chances, wind, UV index, sunrise, sunset, and weather alerts.">
 
 <!-- Structured data -->
 <script type="application/ld+json">
@@ -52,8 +53,9 @@
   "@context": "https://schema.org",
   "@type": "WebApplication",
   "name": "Vistasky",
-  "image": "og-image.svg",
-  "description": "Vistasky is your smart weather companion for live local conditions, hourly and 10-day forecasts, rain chances, and interactive weather trends for cities worldwide.",
+  "url": "https://vistasky.vercel.app/",
+  "image": "https://vistasky.vercel.app/og-image.svg",
+  "description": "Vistasky provides current weather conditions and forecasts for cities worldwide, including hourly and 10-day outlooks, precipitation chances, wind, UV index, and weather alerts.",
   "applicationCategory": "WeatherApplication",
   "operatingSystem": "Any",
   "browserRequirements": "Requires JavaScript",
@@ -65,7 +67,7 @@
     "Current conditions with feels-like temperature",
     "Hourly forecast for the next 24 hours",
     "48-hour temperature and precipitation chart",
-    "10-day forecast",
+    "10-day daily forecast",
     "Wind, humidity, UV index, pressure and visibility",
     "Weather alerts for storms, extreme heat and freezing conditions",
     "Sunrise and sunset times",
@@ -191,7 +193,8 @@
 
     <!-- Main content -->
     <section class="order-1 lg:order-2 space-y-6 min-w-0" aria-label="Weather forecast">
-      <p class="sr-only">Vistasky shows live weather for any city: current temperature and conditions, feels-like temperature, wind, humidity, UV index, pressure, visibility, sunrise and sunset, an hourly forecast, a 48-hour temperature and rain chart, and a 10-day forecast.</p>
+      <h1 class="text-xl sm:text-2xl font-semibold text-slate-900">Live Weather Forecasts for Cities Worldwide</h1>
+      <p class="sr-only">Check current temperature and conditions, feels-like temperature, wind, humidity, UV index, pressure, visibility, sunrise and sunset, the next 24 hours, a 48-hour temperature and precipitation trend, and a 10-day forecast.</p>
       <div id="errorBox" class="hidden bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3"></div>
       <div id="alerts" class="hidden" role="alert" aria-live="polite"></div>
 
@@ -240,7 +243,11 @@
         <div id="daily" class="divide-y divide-slate-100"></div>
       </div>
 
-      <p class="text-xs text-slate-400 text-center">Weather data by Open-Meteo</p>
+      <p class="text-xs text-slate-400 text-center">
+        Weather data by <a href="https://open-meteo.com/" rel="noopener noreferrer" class="hover:underline">Open-Meteo</a>
+        <span aria-hidden="true"> · </span>
+        <a href="privacy.html" class="hover:underline">Privacy policy</a>
+      </p>
     </section>
   </main>
 
