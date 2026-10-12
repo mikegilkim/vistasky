@@ -31,6 +31,9 @@ describe('Vistasky static server', () => {
     assert.match(response.headers.get('content-type'), /text\/html/);
     assert.match(html, /Vistasky — Your Smart Weather Companion/);
     assert.match(html, /https:\/\/js\.puter\.com\/v2\//);
+    assert.match(html, /googletagmanager\.com\/gtag\/js\?id=G-7S87WY6YLS/);
+    assert.match(html, /analytics_storage:\s*'denied'/);
+    assert.ok(html.indexOf("analytics_storage: 'denied'") < html.indexOf("gtag('config', 'G-7S87WY6YLS')"));
     assert.doesNotMatch(html, /Privacy policy|googleSignInDialog|accounts\.google\.com/);
     assert.match(app, /puter\.auth\.signIn\(\)/);
     assert.match(app, /puter\.auth\.signOut\(\)/);

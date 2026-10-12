@@ -35,19 +35,20 @@
         <li><strong>Synced weather preferences:</strong> If you choose to sign in, Vistasky stores your saved city names and coordinates, last selected location, temperature units, and theme as a single preference value in the Puter Key-Value Store associated with your account. Puter operates this cloud storage.</li>
         <li><strong>Browser storage:</strong> Vistasky itself does not set or read cookies. The browser stores your display theme in local storage. Puter.js manages its own authentication state and may use browser storage or other mechanisms as part of Puter's sign-in service.</li>
         <li><strong>Weather and location requests:</strong> Searching a city sends the search text to Open-Meteo's geocoding service. Forecast requests send the selected location's coordinates to Open-Meteo. If you choose device location, your browser asks permission and coordinates may be sent to Open-Meteo and BigDataCloud for forecast and reverse-geocoding responses.</li>
+        <li><strong>Google Analytics:</strong> The app loads Google Analytics measurement ID G-7S87WY6YLS to measure app usage. Analytics and advertising storage are configured as denied, so the tag does not use analytics or advertising cookies; Google may still receive cookieless measurement pings and technical request data such as your IP address and browser details.</li>
         <li><strong>Technical requests:</strong> The app loads Puter.js and interface libraries, icons, charts, and fonts from their providers. Those servers may receive standard request data such as your IP address and browser details.</li>
       </ul>
     </section>
 
     <section class="mt-7 space-y-3">
       <h2 class="text-xl font-semibold">Purposes and legal bases</h2>
-      <p>The app processes data to provide forecasts you request, operate optional Puter sign-in and preference sync, remember your theme, and maintain the service. The operator must document the appropriate legal basis for each purpose and the applicable ePrivacy rules for device storage. Device location is requested only after you choose the location feature and grant browser permission.</p>
+      <p>The app processes data to provide forecasts you request, operate optional Puter sign-in and preference sync, measure app usage through cookieless Google Analytics pings, remember your theme, and maintain the service. The operator must document the appropriate legal basis for each purpose and the applicable ePrivacy rules for device storage. Device location is requested only after you choose the location feature and grant browser permission.</p>
     </section>
 
     <section class="mt-7 space-y-3">
       <h2 class="text-xl font-semibold">Cookies and third-party services</h2>
-      <p>Vistasky itself does not create, read, or rely on cookies, and it does not run analytics, advertising, or personalization trackers. Puter.js is loaded to provide Puter sign-in and cloud preference sync. Puter may use cookies or other browser storage mechanisms for authentication under its own privacy terms. Vistasky does not control Puter's storage practices.</p>
-      <p>Vistasky stores the display theme in local storage. Puter.js manages its own sign-in state. Weather, font, icon, chart, styling, and authentication requests may send standard network information, such as your IP address, to the named third-party providers.</p>
+      <p>Vistasky itself does not create or read cookies. Google Analytics is loaded with Google Consent Mode storage defaults set to denied for analytics and advertising; no consent-update flow is configured. Google may still receive cookieless measurement pings. Puter.js is loaded to provide Puter sign-in and cloud preference sync; Puter may use cookies or other browser storage mechanisms for authentication under its own privacy terms, which Vistasky does not control.</p>
+      <p>Vistasky stores the display theme in local storage. Puter.js manages its own sign-in state. Weather, analytics, font, icon, chart, styling, and authentication requests may send standard network information, such as your IP address, to the named third-party providers.</p>
     </section>
 
     <section class="mt-7 space-y-3">
@@ -58,7 +59,7 @@
     <section class="mt-7 space-y-3">
       <h2 class="text-xl font-semibold">Your rights and international processing</h2>
       <p>Subject to applicable law, you may request access, correction, erasure, restriction, portability, or object to processing, and you may withdraw consent where processing relies on consent. Use the in-app data deletion control for synced preferences or contact the operator using the privacy contact above. You may also complain to your local data-protection authority.</p>
-      <p>Puter, Vercel, and other named service providers process requests needed to provide their services. Their processing locations and transfer safeguards depend on the operator's deployment and provider arrangements. The operator must identify and document applicable processors, international transfers, and safeguards before launch.</p>
+      <p>Google, Puter, Vercel, and other named service providers process requests needed to provide their services. Their processing locations and transfer safeguards depend on the operator's deployment and provider arrangements. The operator must identify and document applicable processors, international transfers, and safeguards before launch.</p>
     </section>
 
     <p class="mt-10 border-t border-slate-200 pt-5 text-sm text-slate-500 dark:border-slate-800">Return to <a href="/" class="text-blue-600 hover:underline">Vistasky</a> to delete synced weather preferences.</p>

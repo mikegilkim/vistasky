@@ -22,6 +22,8 @@ Vistasky does not implement its own login credentials, session API, or preferenc
 
 Vistasky does not set its own cookies. Puter sign-in is handled by Puter.js and may use Puter-controlled browser storage or authentication mechanisms. The app stores theme locally and uses Puter's Key-Value Store for signed-in weather preferences. Weather searches and forecast requests are sent to Open-Meteo; other interface resources load from their listed providers.
 
+Google Analytics (`G-7S87WY6YLS`) is configured with Google Consent Mode storage defaults denied for analytics and advertising. This prevents analytics and advertising cookies but still allows cookieless measurement pings to Google. Review local privacy requirements before changing these defaults.
+
 See [privacy.html](./privacy.html) for the current privacy notice. The public site no longer links to it from the footer.
 
 ## Deploy to Vercel
