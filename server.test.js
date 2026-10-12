@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict';
 import { after, before, describe, it } from 'node:test';
+import { createServer } from 'node:http';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import vercelHandler from './api/[...path].js';
 import { createAppServer } from './server.js';
 
 describe('Vistasky web server', () => {
@@ -68,6 +70,30 @@ describe('Vistasky web server', () => {
     assert.match(manifestResponse.headers.get('content-type'), /application\/json/);
     assert.equal((await manifestResponse.json()).short_name, 'Vistasky');
     assert.equal((await configResponse.json()).googleClientId, 'test-google-client-id');
+  });
+
+  it('serves Vercel API requests through the serverless handler', async () => {
+    const vercelServer = createServer(vercelHandler);
+    await new Promise((resolve, reject) => {
+      vercelServer.once('error', reject);
+      vercelServer.listen(0, '127.0.0.1', resolve);
+    });
+
+    try {
+      const base = `http://127.0.0.1:${vercelServer.address().port}`;
+      const [configResponse, sessionResponse] = await Promise.all([
+        fetch(`${base}/api/config`),
+        fetch(`${base}/api/auth/session`),
+      ]);
+
+      assert.equal(configResponse.status, 200);
+      assert.deepEqual(await configResponse.json(), { googleClientId: '' });
+      assert.equal(sessionResponse.status, 200);
+      assert.deepEqual(await sessionResponse.json(), { signedIn: false });
+      assert.equal(sessionResponse.headers.get('set-cookie'), null);
+    } finally {
+      await new Promise((resolve, reject) => vercelServer.close((error) => error ? reject(error) : resolve()));
+    }
   });
 
   it('supports HEAD, rejects unsupported methods, and blocks cross-origin API mutations', async () => {

@@ -191,7 +191,7 @@ function createPreferencesStore(dataDir) {
   };
 }
 
-export function createAppServer({
+export function createAppHandler({
   googleClientId = process.env.GOOGLE_CLIENT_ID || '',
   dataDir = process.env.DATA_DIR || join(root, '.data'),
   googleCredentialVerifier = verifyGoogleCredential,
@@ -230,7 +230,7 @@ export function createAppServer({
     }
   }
 
-  return createServer(async (req, res) => {
+  return async (req, res) => {
     const method = req.method || 'GET';
     let url;
     try {
@@ -384,7 +384,11 @@ export function createAppServer({
       'Referrer-Policy': 'strict-origin-when-cross-origin',
     });
     res.end(method === 'HEAD' ? undefined : body);
-  });
+  };
+}
+
+export function createAppServer(options) {
+  return createServer(createAppHandler(options));
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
