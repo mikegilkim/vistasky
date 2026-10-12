@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <style>
+      .f{font-family:Inter,'Helvetica Neue',Helvetica,Arial,sans-serif}
+    </style>
+    <clipPath id="card"><rect x="660" y="95" width="460" height="440" rx="32"/></clipPath>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#0f172a"/>
+  <!-- Subtle decorative circles -->
+  <circle cx="1130" cy="40" r="220" fill="#1e293b"/>
+  <circle cx="70" cy="640" r="160" fill="#1e293b"/>
+
+  <!-- Brand -->
+  <g transform="translate(80 92)">
+    <rect width="64" height="64" rx="14" fill="#2563eb"/>
+    <circle cx="24" cy="24" r="9" fill="#fbbf24"/>
+    <path d="M22 48a10 10 0 0 1 1.5-19.9A13 13 0 0 1 48 31a8.5 8.5 0 0 1-1 17Z" fill="#fff"/>
+    <text x="84" y="44" class="f" font-size="34" font-weight="700" fill="#f8fafc">Vistasky</text>
+  </g>
+
+  <!-- Headline -->
+  <text class="f" font-weight="700" fill="#f8fafc" font-size="64" letter-spacing="-1.5">
+    <tspan x="80" y="275">Live weather</tspan>
+    <tspan x="80" y="350">for any city.</tspan>
+  </text>
+  <text class="f" font-size="26" fill="#94a3b8">
+    <tspan x="80" y="415">Current conditions, hourly outlook</tspan>
+    <tspan x="80" y="451">and a 10-day forecast at a glance.</tspan>
+  </text>
+
+  <!-- Feature pills -->
+  <g class="f" font-size="20" font-weight="600">
+    <rect x="80" y="497" width="146" height="44" rx="22" fill="#1e293b"/>
+    <text x="153" y="526" text-anchor="middle" fill="#cbd5e1">10-day</text>
+    <rect x="240" y="497" width="146" height="44" rx="22" fill="#1e293b"/>
+    <text x="313" y="526" text-anchor="middle" fill="#cbd5e1">Hourly</text>
+    <rect x="400" y="497" width="180" height="44" rx="22" fill="#1e293b"/>
+    <text x="490" y="526" text-anchor="middle" fill="#cbd5e1">Rain chance</text>
+  </g>
+
+  <!-- Weather card mock -->
+  <g clip-path="url(#card)">
+    <rect x="660" y="95" width="460" height="440" fill="#0ea5e9"/>
+    <!-- sun rays -->
+    <g fill="#ffffff" opacity="0.08">
+      <path d="M1010 200 L1250 120 L1250 170Z"/>
+      <path d="M1010 200 L1200 380 L1160 400Z"/>
+      <path d="M1010 200 L950 -40 L1000 -40Z"/>
+      <path d="M1010 200 L760 330 L760 290Z"/>
+    </g>
+    <circle cx="1010" cy="200" r="90" fill="#ffffff" opacity="0.1"/>
+  </g>
+  <g class="f">
+    <text x="700" y="150" font-size="20" fill="#e0f2fe">San Francisco, California</text>
+    <text x="700" y="186" font-size="30" font-weight="700" fill="#ffffff">San Francisco</text>
+
+    <!-- sun icon -->
+    <g transform="translate(1010 200)" stroke="#ffffff" stroke-width="6" stroke-linecap="round" fill="none">
+      <circle r="30"/>
+      <path d="M0 -52v-10M0 52v10M-52 0h-10M52 0h10M-37 -37l-7 -7M37 37l7 7M-37 37l-7 7M37 -37l7 -7"/>
+    </g>
+
+    <text x="696" y="330" font-size="128" font-weight="300" fill="#ffffff" letter-spacing="-4">72°</text>
+    <text x="700" y="372" font-size="26" font-weight="600" fill="#ffffff">Sunny</text>
+    <text x="700" y="404" font-size="20" fill="#e0f2fe">Feels like 70° · H 75° L 58°</text>
+
+    <!-- mini forecast -->
+    <line x1="700" y1="436" x2="1080" y2="436" stroke="#ffffff" stroke-opacity="0.25" stroke-width="2"/>
+    <g font-size="18" fill="#e0f2fe" text-anchor="middle">
+      <text x="730" y="472">Mon</text>
+      <text x="820" y="472">Tue</text>
+      <text x="910" y="472">Wed</text>
+      <text x="1000" y="472">Thu</text>
+      <text x="1065" y="472">Fri</text>
+    </g>
+    <g font-size="22" font-weight="700" fill="#ffffff" text-anchor="middle">
+      <text x="730" y="508">74°</text>
+      <text x="820" y="508">71°</text>
+      <text x="910" y="508">66°</text>
+      <text x="1000" y="508">69°</text>
+      <text x="1065" y="508">73°</text>
+    </g>
+  </g>
+</svg>

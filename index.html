@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vistasky — Your Smart Weather Companion | Live Forecasts</title>
+<meta name="description" content="Plan with Vistasky, your smart weather companion. Get live local weather, hourly and 10-day forecasts, rain chances, wind, weather alerts, and interactive trends for cities worldwide.">
+<meta name="keywords" content="Vistasky forecast, weather forecast app, skycast weather technology, local weather updates, hourly and daily forecasts, severe weather alerts, weather trends, global weather coverage, easy weather app, weather app, forecast, local weather, storm alerts, daily outlook, climate trends">
+<meta name="author" content="Vistasky">
+<meta name="application-name" content="Vistasky">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="color-scheme" content="light dark">
+<meta name="format-detection" content="telephone=no">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Vistasky">
+<meta property="og:title" content="Vistasky — Your Smart Weather Companion">
+<meta property="og:description" content="Stay ahead of the weather with live local conditions, hourly and 10-day forecasts, weather alerts, and interactive trends for cities worldwide.">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="og-image.svg">
+<meta property="og:image:type" content="image/svg+xml">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Vistasky weather app showing live weather for any city with a 10-day forecast">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="og-image.svg">
+<meta name="twitter:image:alt" content="Vistasky weather app showing live weather for any city with a 10-day forecast">
+<meta name="twitter:title" content="Vistasky — Your Smart Weather Companion">
+<meta name="twitter:description" content="Search cities worldwide for live local weather, hourly and 10-day forecasts, weather alerts, and interactive trends.">
+
+<!-- Structured data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Vistasky",
+  "image": "og-image.svg",
+  "description": "Vistasky is your smart weather companion for live local conditions, hourly and 10-day forecasts, rain chances, and interactive weather trends for cities worldwide.",
+  "applicationCategory": "WeatherApplication",
+  "operatingSystem": "Any",
+  "browserRequirements": "Requires JavaScript",
+  "inLanguage": "en",
+  "isAccessibleForFree": true,
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "featureList": [
+    "City search with autocomplete",
+    "Current conditions with feels-like temperature",
+    "Hourly forecast for the next 24 hours",
+    "48-hour temperature and precipitation chart",
+    "10-day forecast",
+    "Wind, humidity, UV index, pressure and visibility",
+    "Weather alerts for storms, extreme heat and freezing conditions",
+    "Sunrise and sunset times",
+    "Celsius and Fahrenheit units",
+    "Saved cities synced across devices",
+    "Dark mode"
+  ]
+}
+</script>
+<meta name="theme-color" content="#2563eb">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script>tailwind.config={darkMode:'class',theme:{extend:{fontFamily:{sans:['Inter','system-ui','sans-serif']}}}}</script>
+<script>
+  (function(){var t=null;try{t=localStorage.getItem('skycast_theme');}catch(e){}
+  if(!t)t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+  if(t==='dark')document.documentElement.classList.add('dark');})();
+</script>
+<style>
+  body{font-feature-settings:"tnum";}
+  .scroll-x{scrollbar-width:none}.scroll-x::-webkit-scrollbar{display:none}
+  .skeleton{background:#e2e8f0;border-radius:.5rem;animation:pulse 1.4s ease-in-out infinite}
+  @keyframes pulse{50%{opacity:.5}}
+
+  /* ---------- Dark mode ---------- */
+  html.dark{color-scheme:dark}
+  html.dark body.bg-slate-50{background:#020617}
+  html.dark .text-slate-900{color:#f1f5f9}
+  html.dark .text-slate-700{color:#cbd5e1}
+  html.dark .text-slate-600,html.dark .text-slate-500{color:#94a3b8}
+  html.dark .text-slate-400{color:#64748b}
+  html.dark .bg-white{background-color:#0f172a}
+  html.dark .bg-white\/90{background-color:rgba(15,23,42,.85)}
+  html.dark .bg-slate-100{background-color:#1e293b}
+  html.dark .hover\:bg-slate-50:hover,html.dark .hover\:bg-slate-100:hover{background-color:#1e293b}
+  html.dark .focus\:bg-white:focus{background-color:#0f172a}
+  html.dark .border-slate-200,html.dark .border-slate-100{border-color:#1e293b}
+  html.dark .divide-slate-100>:not([hidden])~:not([hidden]){border-color:#1e293b}
+  html.dark .bg-blue-50{background-color:rgba(59,130,246,.12)}
+  html.dark .border-blue-200{border-color:rgba(59,130,246,.35)}
+  html.dark .text-blue-700{color:#93c5fd}
+  html.dark .text-blue-600{color:#60a5fa}
+  html.dark .bg-red-50{background-color:rgba(239,68,68,.1)}
+  html.dark .border-red-200{border-color:rgba(239,68,68,.3)}
+  html.dark .text-red-700{color:#fca5a5}
+  html.dark .skeleton{background:#1e293b}
+  html.dark .bg-amber-50{background-color:rgba(245,158,11,.1)}
+  html.dark .border-amber-200{border-color:rgba(245,158,11,.3)}
+  html.dark .text-amber-900{color:#fde68a}
+  html.dark .text-amber-700{color:#fcd34d}
+  html.dark .bg-amber-100{background-color:rgba(245,158,11,.18)}
+  html.dark .bg-red-100{background-color:rgba(239,68,68,.18)}
+  html.dark .text-red-900{color:#fecaca}
+  html.dark .text-red-600{color:#f87171}
+  html.dark .bg-amber-100\/70,html.dark .hover\:bg-amber-100:hover{background-color:rgba(245,158,11,.18)}
+  html.dark .hover\:bg-red-100:hover{background-color:rgba(239,68,68,.18)}
+  html.dark .unit-btn.bg-white{background-color:#334155;color:#f8fafc}
+  html.dark .hover\:text-slate-700:hover{color:#e2e8f0}
+  body,header,.bg-white{transition:background-color .25s ease,border-color .25s ease}
+  dialog::backdrop{background:rgba(15,23,42,.55);backdrop-filter:blur(3px)}
+  dialog{color:inherit}
+  html.dark dialog{background:#0f172a;color:#f1f5f9;border-color:#1e293b}
+</style>
+    <!-- puter-pwa: generated, do not edit -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon-180.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Vistasky">
+    <!-- /puter-pwa -->
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans antialiased min-h-screen">
+  <!-- Top bar -->
+  <header class="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-slate-200">
+    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center gap-3">
+      <div class="flex items-center gap-2 shrink-0">
+        <img src="icon.svg" class="w-8 h-8" alt="Vistasky logo" width="32" height="32">
+        <span class="font-semibold text-lg hidden sm:block">Vistasky</span>
+      </div>
+      <div class="relative flex-1 max-w-xl mx-auto">
+        <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+        <input id="search" type="search" autocomplete="off" placeholder="Search for a city…" aria-label="Search for a city"
+          class="w-full h-10 pl-9 pr-9 rounded-lg bg-slate-100 border border-transparent focus:bg-white focus:border-blue-500 outline-none text-sm transition">
+        <div id="searchSpin" class="hidden absolute right-3 top-1/2 -translate-y-1/2"><i data-lucide="loader-2" class="w-4 h-4 text-slate-400 animate-spin"></i></div>
+        <div id="results" class="hidden absolute left-0 right-0 top-12 bg-white border border-slate-200 rounded-lg overflow-hidden"></div>
+      </div>
+      <button id="locateBtn" title="Use my location" class="h-10 w-10 grid place-items-center rounded-lg hover:bg-slate-100 text-slate-600 shrink-0">
+        <i data-lucide="locate-fixed" class="w-5 h-5"></i>
+      </button>
+      <button id="themeBtn" title="Toggle dark mode" aria-label="Toggle dark mode" class="h-10 w-10 grid place-items-center rounded-lg hover:bg-slate-100 text-slate-600 shrink-0">
+        <i data-lucide="moon" class="w-5 h-5 dark:hidden"></i>
+        <i data-lucide="sun" class="w-5 h-5 hidden dark:block"></i>
+      </button>
+      <div class="flex rounded-lg bg-slate-100 p-1 text-sm font-medium shrink-0">
+        <button data-unit="celsius" class="unit-btn px-2.5 py-1 rounded-md">°C</button>
+        <button data-unit="fahrenheit" class="unit-btn px-2.5 py-1 rounded-md">°F</button>
+      </div>
+      <button id="authBtn" class="h-10 px-3 rounded-lg border border-slate-200 hover:bg-slate-50 text-sm font-medium flex items-center gap-2 shrink-0" aria-label="Sign in with Google">
+        <i data-lucide="user" class="w-4 h-4"></i><span id="authLabel" class="hidden md:inline">Sign in</span>
+      </button>
+    </div>
+  </header>
+
+  <noscript>
+    <div class="max-w-6xl mx-auto px-4 py-6">
+      <p>Vistasky is a weather app that shows current conditions, an hourly outlook and a 10-day forecast for any city. Please enable JavaScript to use it.</p>
+    </div>
+  </noscript>
+  <main class="max-w-6xl mx-auto px-4 py-6 grid lg:grid-cols-[260px_1fr] gap-6">
+    <!-- Sidebar: saved cities -->
+    <aside class="order-2 lg:order-1" aria-label="Saved cities">
+      <div class="bg-white border border-slate-200 rounded-2xl p-4">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-sm font-semibold text-slate-700">Saved cities</h2>
+          <i data-lucide="bookmark" class="w-4 h-4 text-slate-400"></i>
+        </div>
+        <div id="savedList" class="space-y-1"></div>
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <section class="order-1 lg:order-2 space-y-6 min-w-0" aria-label="Weather forecast">
+      <p class="sr-only">Vistasky shows live weather for any city: current temperature and conditions, feels-like temperature, wind, humidity, UV index, pressure, visibility, sunrise and sunset, an hourly forecast, a 48-hour temperature and rain chart, and a 10-day forecast.</p>
+      <div id="errorBox" class="hidden bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3"></div>
+      <div id="alerts" class="hidden" role="alert" aria-live="polite"></div>
+
+      <!-- Current -->
+      <div id="currentCard" class="relative overflow-hidden bg-blue-600 text-white rounded-2xl transition-colors duration-700">
+        <canvas id="fx" class="absolute inset-0 w-full h-full pointer-events-none" aria-hidden="true"></canvas>
+        <div id="flash" class="absolute inset-0 bg-white opacity-0 pointer-events-none"></div>
+        <div id="current" class="relative p-6 sm:p-8"></div>
+      </div>
+
+      <!-- Details -->
+      <div id="details" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></div>
+
+      <!-- Hourly -->
+      <div class="bg-white border border-slate-200 rounded-2xl p-5">
+        <div class="flex items-center gap-2 mb-4">
+          <i data-lucide="clock" class="w-4 h-4 text-slate-400"></i>
+          <h2 class="text-sm font-semibold text-slate-700">Next 24 hours</h2>
+        </div>
+        <div id="hourly" class="flex gap-2 overflow-x-auto scroll-x -mx-1 px-1"></div>
+      </div>
+
+      <!-- 48h chart -->
+      <div class="bg-white border border-slate-200 rounded-2xl p-5">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div class="flex items-center gap-2">
+            <i data-lucide="chart-line" class="w-4 h-4 text-slate-400"></i>
+            <h2 class="text-sm font-semibold text-slate-700">48-hour trend</h2>
+          </div>
+          <div class="flex items-center gap-4 text-xs text-slate-500">
+            <span class="flex items-center gap-1.5"><span class="w-3 h-0.5 rounded bg-orange-500"></span>Temperature</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-2 rounded-sm bg-blue-500/30 border-t-2 border-blue-500"></span>Chance of rain</span>
+          </div>
+        </div>
+        <div class="relative h-56 sm:h-64">
+          <canvas id="trendChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Daily -->
+      <div class="bg-white border border-slate-200 rounded-2xl p-5">
+        <div class="flex items-center gap-2 mb-2">
+          <i data-lucide="calendar-days" class="w-4 h-4 text-slate-400"></i>
+          <h2 class="text-sm font-semibold text-slate-700">10-day forecast</h2>
+        </div>
+        <div id="daily" class="divide-y divide-slate-100"></div>
+      </div>
+
+      <p class="text-xs text-slate-400 text-center">Weather data by Open-Meteo</p>
+    </section>
+  </main>
+
+  <footer class="max-w-6xl mx-auto px-4 pb-8 flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs text-slate-500">
+    <a href="privacy.html" class="hover:underline">Privacy policy</a>
+    <button id="deleteDataBtn" class="hidden hover:underline text-red-600">Delete synced weather data</button>
+  </footer>
+
+  <dialog id="googleSignInDialog" class="w-[min(92vw,26rem)] rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
+    <h2 class="text-lg font-semibold">Sign in or sign up with Google</h2>
+    <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">Use your Google account to create or access your Vistasky profile and sync saved cities and weather preferences. Vistasky does not save your Google name or email address.</p>
+    <p id="googleSignInError" class="hidden mt-3 text-sm text-red-600" role="alert"></p>
+    <div id="googleSignInButton" class="mt-5 flex justify-center"></div>
+    <div class="mt-5 flex justify-end">
+      <button id="cancelGoogleSignInBtn" class="px-3 py-2 rounded-lg border border-slate-300 text-sm font-medium hover:bg-slate-50 dark:border-slate-600 dark:hover:bg-slate-800">Cancel</button>
+    </div>
+  </dialog>
+
+  <script type="module" src="app.js?v=20261013-no-cookie-banner"></script>
+</body>
+</html>
