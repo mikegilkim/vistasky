@@ -1,4 +1,4 @@
-import { createPublicKey, randomBytes, randomUUID, verify } from 'node:crypto';
+import { createHash, createPublicKey, randomBytes, randomUUID, verify } from 'node:crypto';
 import { createServer } from 'node:http';
 import { mkdir, readFile, rename, unlink, writeFile } from 'node:fs/promises';
 import { extname, isAbsolute, join, relative, resolve, sep } from 'node:path';
@@ -191,9 +191,101 @@ function createPreferencesStore(dataDir) {
   };
 }
 
+function createSupabaseStore({ url, serviceRoleKey, fetchImpl }) {
+  let baseUrl;
+  try {
+    baseUrl = new URL(url);
+  } catch {
+    throw new Error('SUPABASE_URL must be a valid HTTPS URL.');
+  }
+  if (baseUrl.protocol !== 'https:' && !['localhost', '127.0.0.1'].includes(baseUrl.hostname)) {
+    throw new Error('SUPABASE_URL must use HTTPS.');
+  }
+
+  async function request(table, query, { method = 'GET', body, prefer } = {}) {
+    const endpoint = new URL(`/rest/v1/${table}`, baseUrl);
+    endpoint.search = new URLSearchParams(query).toString();
+    const headers = {
+      apikey: serviceRoleKey,
+      Authorization: `Bearer ${serviceRoleKey}`,
+      Accept: 'application/json',
+    };
+    if (body !== undefined) headers['Content-Type'] = 'application/json';
+    if (prefer) headers.Prefer = prefer;
+
+    let response;
+    try {
+      response = await fetchImpl(endpoint, {
+        method,
+        headers,
+        ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+        signal: AbortSignal.timeout(8000),
+      });
+    } catch {
+      const error = new Error(`Supabase ${table} request could not be completed.`);
+      error.status = 503;
+      throw error;
+    }
+    if (!response.ok) {
+      const error = new Error(`Supabase ${table} request failed (${response.status}).`);
+      error.status = 503;
+      throw error;
+    }
+    if (response.status === 204 || method === 'DELETE') return null;
+    return response.json();
+  }
+
+  return {
+    async createSession(tokenHash, subject, expiresAt) {
+      await request('vistasky_sessions', {
+        expires_at: `lt.${new Date().toISOString()}`,
+      }, { method: 'DELETE' });
+      await request('vistasky_sessions', { on_conflict: 'token_hash' }, {
+        method: 'POST',
+        body: [{ token_hash: tokenHash, subject, expires_at: new Date(expiresAt).toISOString() }],
+        prefer: 'resolution=merge-duplicates,return=minimal',
+      });
+    },
+    async getSession(tokenHash) {
+      const rows = await request('vistasky_sessions', {
+        token_hash: `eq.${tokenHash}`,
+        expires_at: `gt.${new Date().toISOString()}`,
+        select: 'subject,expires_at',
+        limit: '1',
+      });
+      return rows[0] ? { subject: rows[0].subject, expiresAt: Date.parse(rows[0].expires_at) } : null;
+    },
+    async deleteSession(tokenHash) {
+      await request('vistasky_sessions', { token_hash: `eq.${tokenHash}` }, { method: 'DELETE' });
+    },
+    async get(subject) {
+      const rows = await request('vistasky_preferences', {
+        account_id: `eq.${subject}`,
+        select: 'preferences',
+        limit: '1',
+      });
+      return rows[0]?.preferences ?? null;
+    },
+    async update(subject, value) {
+      if (value === null) {
+        await request('vistasky_preferences', { account_id: `eq.${subject}` }, { method: 'DELETE' });
+        return;
+      }
+      await request('vistasky_preferences', { on_conflict: 'account_id' }, {
+        method: 'POST',
+        body: [{ account_id: subject, preferences: value }],
+        prefer: 'resolution=merge-duplicates,return=minimal',
+      });
+    },
+  };
+}
+
 export function createAppHandler({
   googleClientId = process.env.GOOGLE_CLIENT_ID || '',
   dataDir = process.env.DATA_DIR || join(root, '.data'),
+  supabaseUrl = process.env.SUPABASE_URL || '',
+  supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+  supabaseFetch = fetch,
   googleCredentialVerifier = verifyGoogleCredential,
 } = {}) {
   const resolvedDataDir = resolve(dataDir);
@@ -203,17 +295,43 @@ export function createAppHandler({
   if (isWithinApp && relativeDataDir !== '.data' && !relativeDataDir.startsWith(`.data${sep}`)) {
     throw new Error('DATA_DIR must be outside the app directory or inside its private .data directory.');
   }
-  const sessions = new Map();
-  const preferences = createPreferencesStore(resolvedDataDir);
+  if (Boolean(supabaseUrl) !== Boolean(supabaseServiceRoleKey)) {
+    throw new Error('SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must both be configured.');
+  }
+  const durableStore = supabaseUrl
+    ? createSupabaseStore({ url: supabaseUrl, serviceRoleKey: supabaseServiceRoleKey, fetchImpl: supabaseFetch })
+    : null;
+  const localSessions = new Map();
+  const sessions = durableStore || {
+    async createSession(token, subject, expiresAt) {
+      localSessions.set(token, { subject, expiresAt });
+    },
+    async getSession(token) {
+      const session = localSessions.get(token);
+      if (!session) return null;
+      if (session.expiresAt <= Date.now()) {
+        localSessions.delete(token);
+        return null;
+      }
+      return session;
+    },
+    async deleteSession(token) {
+      localSessions.delete(token);
+    },
+  };
+  const preferences = durableStore || createPreferencesStore(resolvedDataDir);
+  const getSessionKey = (token) => durableStore
+    ? createHash('sha256').update(token).digest('hex')
+    : token;
 
-  function getSession(req) {
+  async function getSession(req) {
     const authorization = req.headers.authorization || '';
     const match = /^Bearer ([A-Za-z0-9_-]{43})$/.exec(authorization);
     if (!match) return null;
-    const session = sessions.get(match[1]);
+    const session = await sessions.getSession(getSessionKey(match[1]));
     if (!session) return null;
     if (session.expiresAt <= Date.now()) {
-      sessions.delete(match[1]);
+      await sessions.deleteSession(getSessionKey(match[1]));
       return null;
     }
     return session;
@@ -248,8 +366,13 @@ export function createAppHandler({
       }
 
       if (method === 'GET' && pathname === '/api/auth/session') {
-        const session = getSession(req);
-        sendJson(res, 200, { signedIn: Boolean(session) });
+        try {
+          const session = await getSession(req);
+          sendJson(res, 200, { signedIn: Boolean(session) });
+        } catch (error) {
+          console.error('Failed to check the sign-in session:', error);
+          sendJson(res, 503, { error: 'Account storage is temporarily unavailable.' });
+        }
         return;
       }
 
@@ -266,13 +389,15 @@ export function createAppHandler({
         try {
           const body = await readJson(req);
           const claims = await googleCredentialVerifier(body.credential, googleClientId);
-          for (const [existingToken, session] of sessions) {
-            if (session.expiresAt <= Date.now()) sessions.delete(existingToken);
-          }
           const token = randomBytes(32).toString('base64url');
-          sessions.set(token, { subject: claims.sub, expiresAt: Date.now() + sessionLifetime });
+          await sessions.createSession(getSessionKey(token), claims.sub, Date.now() + sessionLifetime);
           sendJson(res, 200, { signedIn: true, sessionToken: token });
         } catch (error) {
+          if (error.status === 503) {
+            console.error('Failed to create the sign-in session:', error);
+            sendJson(res, 503, { error: 'Account storage is temporarily unavailable.' });
+            return;
+          }
           sendJson(res, error.status || 401, {
             error: error.status === 413 ? error.message : 'Google sign-in could not be verified.',
           });
@@ -281,16 +406,27 @@ export function createAppHandler({
       }
 
       if (method === 'POST' && pathname === '/api/auth/logout') {
-        const session = getSession(req);
         const authorization = req.headers.authorization || '';
         const match = /^Bearer ([A-Za-z0-9_-]{43})$/.exec(authorization);
-        if (session && match) sessions.delete(match[1]);
-        sendJson(res, 200, { signedIn: false });
+        try {
+          if (match) await sessions.deleteSession(getSessionKey(match[1]));
+          sendJson(res, 200, { signedIn: false });
+        } catch (error) {
+          console.error('Failed to end the sign-in session:', error);
+          sendJson(res, 503, { error: 'Account storage is temporarily unavailable.' });
+        }
         return;
       }
 
       if (pathname === '/api/preferences') {
-        const session = getSession(req);
+        let session;
+        try {
+          session = await getSession(req);
+        } catch (error) {
+          console.error('Failed to load the sign-in session:', error);
+          sendJson(res, 503, { error: 'Account storage is temporarily unavailable.' });
+          return;
+        }
         if (!session) {
           sendJson(res, 401, { error: 'Sign in to manage synced preferences.' });
           return;
@@ -316,6 +452,7 @@ export function createAppHandler({
             return;
           }
         } catch (error) {
+          console.error('Failed to process the preferences request:', error);
           sendJson(res, error.status || 500, {
             error: error.status ? error.message : 'Could not process the preferences request.',
           });
@@ -389,6 +526,15 @@ export function createAppHandler({
 
 export function createAppServer(options) {
   return createServer(createAppHandler(options));
+}
+
+export function createVercelAppHandler() {
+  const hasSupabaseStorage = Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+  const googleClientId = hasSupabaseStorage ? process.env.GOOGLE_CLIENT_ID || '' : '';
+  if (!hasSupabaseStorage && process.env.GOOGLE_CLIENT_ID) {
+    console.warn('Google sign-in is disabled on Vercel until Supabase session and preference storage is configured.');
+  }
+  return createAppHandler({ googleClientId, dataDir: '/tmp/vistasky' });
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {

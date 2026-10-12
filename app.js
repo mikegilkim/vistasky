@@ -594,7 +594,7 @@ async function signIn() {
   $('googleSignInButton').replaceChildren();
   dialog.showModal();
   if (!googleClientId) {
-    error.textContent = 'Google sign-in is not configured yet. Set GOOGLE_CLIENT_ID on the server after creating a Google OAuth web client.';
+    error.textContent = 'Google sign-in is not configured on this deployment. The server needs a Google client ID and durable account storage.';
     error.classList.remove('hidden');
     return;
   }

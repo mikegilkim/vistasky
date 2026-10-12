@@ -6,7 +6,57 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import vercelAuthHandler from './api/auth/[...path].js';
 import vercelHandler from './api/[...path].js';
-import { createAppServer } from './server.js';
+import { createAppHandler, createAppServer } from './server.js';
+
+function createSupabaseMock() {
+  const tables = new Map([
+    ['vistasky_sessions', new Map()],
+    ['vistasky_preferences', new Map()],
+  ]);
+
+  const fetchImpl = async (input, options = {}) => {
+    const url = new URL(input);
+    const tableName = url.pathname.split('/').at(-1);
+    const table = tables.get(tableName);
+    assert.ok(table, `Unexpected Supabase table: ${tableName}`);
+    assert.equal(options.headers.apikey, 'test-service-role-key');
+
+    if (options.method === 'POST') {
+      const rows = JSON.parse(options.body);
+      for (const row of rows) {
+        const key = tableName === 'vistasky_sessions' ? row.token_hash : row.account_id;
+        table.set(key, row);
+      }
+      return new Response(null, { status: 204 });
+    }
+
+    const tokenHash = url.searchParams.get('token_hash')?.replace(/^eq\./, '');
+    const accountId = url.searchParams.get('account_id')?.replace(/^eq\./, '');
+    const expiredBefore = url.searchParams.get('expires_at')?.replace(/^lt\./, '');
+    if (options.method === 'DELETE') {
+      for (const [key, row] of table) {
+        if ((tokenHash && key === tokenHash) ||
+            (accountId && key === accountId) ||
+            (expiredBefore && row.expires_at < expiredBefore)) {
+          table.delete(key);
+        }
+      }
+      return new Response(null, { status: 204 });
+    }
+
+    let rows = [...table.values()];
+    if (tokenHash) rows = rows.filter((row) => row.token_hash === tokenHash);
+    if (accountId) rows = rows.filter((row) => row.account_id === accountId);
+    const expiresAfter = url.searchParams.get('expires_at')?.replace(/^gt\./, '');
+    if (expiresAfter) rows = rows.filter((row) => row.expires_at > expiresAfter);
+    return new Response(JSON.stringify(rows), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  };
+
+  return { fetchImpl, tables };
+}
 
 describe('Vistasky web server', () => {
   let server;
@@ -105,6 +155,99 @@ describe('Vistasky web server', () => {
     } finally {
       await Promise.all([vercelServer, vercelAuthServer].map((instance) =>
         new Promise((resolve, reject) => instance.close((error) => error ? reject(error) : resolve()))));
+    }
+  });
+
+  it('shares hashed sign-in sessions and preferences across Vercel handlers', async () => {
+    const supabase = createSupabaseMock();
+    const createTestHandler = () => createAppHandler({
+      googleClientId: 'test-google-client-id',
+      supabaseUrl: 'https://vistasky-test.supabase.co',
+      supabaseServiceRoleKey: 'test-service-role-key',
+      supabaseFetch: supabase.fetchImpl,
+      googleCredentialVerifier: async () => ({ sub: 'google-account-test-subject' }),
+    });
+    const serverA = createServer(createTestHandler());
+    const serverB = createServer(createTestHandler());
+    async function start(server) {
+      await new Promise((resolve, reject) => {
+        server.once('error', reject);
+        server.listen(0, '127.0.0.1', resolve);
+      });
+      return `http://127.0.0.1:${server.address().port}`;
+    }
+    const [baseA, baseB] = await Promise.all([start(serverA), start(serverB)]);
+    const originA = { Origin: baseA, 'Content-Type': 'application/json' };
+    try {
+      const login = await fetch(`${baseA}/api/auth/google`, {
+        method: 'POST',
+        headers: originA,
+        body: JSON.stringify({ credential: 'valid-google-token' }),
+      });
+      assert.equal(login.status, 200);
+      assert.equal(login.headers.get('set-cookie'), null);
+      const { sessionToken } = await login.json();
+      const authHeaders = { Authorization: 'Bearer ' + sessionToken };
+
+      const session = await fetch(`${baseB}/api/auth/session`, { headers: authHeaders });
+      assert.deepEqual(await session.json(), { signedIn: true });
+      const storedSession = [...supabase.tables.get('vistasky_sessions').values()][0];
+      assert.match(storedSession.token_hash, /^[a-f0-9]{64}$/);
+      assert.notEqual(storedSession.token_hash, sessionToken);
+
+      const preferences = {
+        saved: [{ name: 'Oslo', latitude: 59.9139, longitude: 10.7522 }],
+        unit: 'celsius',
+        last: { name: 'Oslo', latitude: 59.9139, longitude: 10.7522 },
+        theme: 'dark',
+      };
+      const save = await fetch(`${baseB}/api/preferences`, {
+        method: 'PUT',
+        headers: { ...originA, Origin: baseB, ...authHeaders },
+        body: JSON.stringify({ preferences }),
+      });
+      assert.equal(save.status, 200);
+      const read = await fetch(`${baseA}/api/preferences`, { headers: authHeaders });
+      assert.deepEqual((await read.json()).preferences, preferences);
+
+      const logout = await fetch(`${baseB}/api/auth/logout`, {
+        method: 'POST',
+        headers: { ...originA, Origin: baseB, ...authHeaders },
+        body: '{}',
+      });
+      assert.equal(logout.status, 200);
+      assert.deepEqual(await (await fetch(`${baseA}/api/auth/session`, { headers: authHeaders })).json(), { signedIn: false });
+      assert.equal(supabase.tables.get('vistasky_sessions').size, 0);
+    } finally {
+      await Promise.all([serverA, serverB].map((instance) =>
+        new Promise((resolve, reject) => instance.close((error) => error ? reject(error) : resolve()))));
+    }
+  });
+
+  it('reports Supabase outages and incomplete storage configuration explicitly', async () => {
+    assert.throws(() => createAppHandler({
+      supabaseUrl: 'https://vistasky-test.supabase.co',
+      supabaseServiceRoleKey: '',
+    }), /SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must both be configured/);
+
+    const unavailableServer = createServer(createAppHandler({
+      supabaseUrl: 'https://vistasky-test.supabase.co',
+      supabaseServiceRoleKey: 'test-service-role-key',
+      supabaseFetch: async () => { throw new Error('network unavailable'); },
+    }));
+    await new Promise((resolve, reject) => {
+      unavailableServer.once('error', reject);
+      unavailableServer.listen(0, '127.0.0.1', resolve);
+    });
+    try {
+      const response = await fetch(`http://127.0.0.1:${unavailableServer.address().port}/api/auth/session`, {
+        headers: { Authorization: 'Bearer ' + 'a'.repeat(43) },
+      });
+      assert.equal(response.status, 503);
+      assert.deepEqual(await response.json(), { error: 'Account storage is temporarily unavailable.' });
+    } finally {
+      await new Promise((resolve, reject) =>
+        unavailableServer.close((error) => error ? reject(error) : resolve()));
     }
   });
 

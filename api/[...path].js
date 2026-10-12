@@ -1,9 +1,6 @@
-import { createAppHandler } from '../server.js';
+import { createVercelAppHandler } from '../server.js';
 
-const handler = createAppHandler({
-  googleClientId: '',
-  dataDir: '/tmp/vistasky',
-});
+const handler = createVercelAppHandler();
 
 export default function vercelHandler(req, res) {
   return handler(req, res);

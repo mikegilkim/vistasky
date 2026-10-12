@@ -15,15 +15,36 @@ Open <http://localhost:3000>. Without `GOOGLE_CLIENT_ID`, weather forecasts stil
 
 ## Set up Google sign-in
 
-1. In the [Google Cloud Console](https://console.cloud.google.com/), create or select a project and configure the Google Auth Platform consent screen with the app name, support email, audience, and contact details.
+1. In the [Google Cloud Console](https://console.cloud.google.com/), create or select a project and configure the Google Auth Platform consent screen with the app name, support email, audience, and contact details. If the app is in testing mode, add your account as a test user.
 2. Create an OAuth client with application type **Web application**.
-3. Add each exact Vistasky origin under **Authorized JavaScript origins** (for local development, `http://localhost:3000`; for production, the HTTPS origin of the deployed app). Google Identity Services returns the credential in the browser, so this integration does not need an OAuth client secret or redirect URI.
-4. Set `GOOGLE_CLIENT_ID` to the client ID for that web client. The ID is public configuration; never put a client secret in browser code.
-5. Use an HTTPS origin for production. Keep `DATA_DIR` on durable, private storage and back it up according to the retention policy.
+3. Add each exact Vistasky origin under **Authorized JavaScript origins** (for local development, `http://localhost:3000`; for production, `https://vistasky.vercel.app`). Google Identity Services returns a signed credential in the browser, so this integration does not use an OAuth client secret or redirect URI. The client ID is public configuration; never put a client secret in browser code.
+4. Create a [Supabase](https://supabase.com/dashboard) project, then run this SQL in its SQL Editor:
 
-For a production start, set `NODE_ENV=production`, `GOOGLE_CLIENT_ID`, and an absolute `DATA_DIR` outside the web app directory before running `npm start`. Vistasky does not use cookies. Its random bearer session token is kept in browser `sessionStorage`, sent in authorization headers, and cleared on sign-out or when the tab closes; matching session state is held in server memory and cleared on restart. Preference data lives in the durable data directory.
+   ```sql
+   create table public.vistasky_sessions (
+     token_hash text primary key,
+     subject text not null,
+     expires_at timestamptz not null
+   );
+   create index vistasky_sessions_expiry_idx on public.vistasky_sessions (expires_at);
 
-The server verifies the Google ID token signature, issuer, audience, and expiry against Google's published signing keys. It does not save the Google name or email. A random bearer token maps to the verified Google account identifier in server memory. Saved locations, the last selected city, temperature units, and theme are saved in `.data/preferences.json` (or `DATA_DIR`); the `sub` account identifier is used as the record key. Sign-out ends the session but does not delete synced preferences. Users can delete those preferences with **Delete synced weather data** in the app footer.
+   create table public.vistasky_preferences (
+     account_id text primary key,
+     preferences jsonb not null
+   );
+
+   alter table public.vistasky_sessions enable row level security;
+   alter table public.vistasky_preferences enable row level security;
+   revoke all on public.vistasky_sessions, public.vistasky_preferences from anon, authenticated;
+   grant all on public.vistasky_sessions, public.vistasky_preferences to service_role;
+   ```
+
+5. In Vercel Project Settings → Environment Variables, add `SUPABASE_URL` (the project URL from Supabase Project Settings → API) and `SUPABASE_SERVICE_ROLE_KEY` (the server-only service role key from that same page), along with `GOOGLE_CLIENT_ID`. Scope them to Production and any Preview environment you use. Never expose the service role key in browser code or a `NEXT_PUBLIC_` variable. The existing `GOOGLE_CLIENT_SECRET` is not used by this sign-in flow; remove it from Vercel if no other server integration needs it.
+6. Redeploy Vercel after saving the variables. Sign-in becomes available only when the Google client ID and both Supabase variables are present.
+
+For a production start outside Vercel, set `NODE_ENV=production`, `GOOGLE_CLIENT_ID`, and an absolute `DATA_DIR` outside the web app directory before running `npm start`. Vistasky does not use cookies. The random bearer session token is kept in browser `sessionStorage`, sent in authorization headers, and cleared on sign-out or when the tab closes. On Vercel, only a SHA-256 hash of the token and its account association are stored in Supabase; synced preferences are stored there as JSONB. Expired session rows are cleaned up on the next successful sign-in.
+
+The server verifies the Google ID token signature, issuer, audience, and expiry against Google's published signing keys. It does not save the Google name or email. Saved locations, the last selected city, temperature units, and theme are keyed by the verified Google account identifier. Sign-out ends the session but does not delete synced preferences. Users can delete those preferences with **Delete synced weather data** in the app footer.
 
 Google sign-in replaces the previous Puter authentication integration. Existing preferences stored in Puter are not automatically migrated.
 
@@ -37,7 +58,7 @@ Review [privacy.html](./privacy.html) and complete its deployment-owner contact 
 
 Import the repository into Vercel and set the project root to the repository root. The [Vercel configuration](./vercel.json) selects the **Other** framework preset so Vercel serves the static app files and deploys the API functions in [api/](./api) without mistaking the browser's `app.js` for a server entry point. Use `vistasky.vercel.app` as the project domain, if it is available in the deploying Vercel account.
 
-The forecast app and weather search run on Vercel. Google sign-in is deliberately disabled there: Vercel instances do not provide the durable local disk and shared session store required by the current preference backend. Do not set `GOOGLE_CLIENT_ID` for this deployment until persistent session and preference storage is implemented and configured. Sign-in and preference sync remain available when using `npm start` with a Google client ID and a persistent `DATA_DIR`.
+The forecast app, weather search, and serverless API run on Vercel. Google sign-in and preference sync are enabled only when the Google client ID and Supabase server credentials are configured. Vercel instances do not use the local JSON preference file for signed-in accounts.
 
 ## Commands
 
